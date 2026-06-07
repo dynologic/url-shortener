@@ -70,7 +70,8 @@ url-shortener/
 │       └── url_shortener_stack.py     ← all AWS resources in one stack
 ├── frontend/
 │   ├── package.json                   ← Vite + React + recharts
-│   ├── .env                           ← VITE_API_URL (gitignored)
+│   ├── public/
+│   │   └── config.json               ← placeholder (empty); CDK writes real values at deploy
 │   ├── .env.example
 │   └── src/
 │       ├── App.jsx
@@ -114,7 +115,7 @@ url-shortener/
 
 **Lambda bundling:** Custom `_LocalBundler` class (jsii ILocalBundling) in the CDK stack. Runs `uv pip install --target` for deps, copies handler + shared/ into the asset output. No Docker needed.
 
-**Frontend env vars:** Vite project uses `VITE_API_URL` prefix (not `REACT_APP_`). CRA was not used because Node 24 is incompatible with react-scripts 5.
+**Frontend runtime config:** API URL and default alias are NOT baked into the JS bundle. The CDK `_FrontendBundler` writes a `config.json` into the S3 output at deploy time (populated from CDK context). App.jsx fetches `/config.json` on load and passes values down as props. `frontend/public/config.json` in the repo has empty values — safe to commit. CRA was not used (Node 24 incompatible with react-scripts 5) — Vite is used instead.
 
 **HIT/MISS detection in browser:** Browser security prevents reading X-Cache header from cross-origin 301 responses (opaqueredirect type). HIT/MISS is inferred from response time — under 30ms = HIT. Works well in practice since Redis hits are ~5ms and DynamoDB misses are ~30-50ms.
 
@@ -128,10 +129,11 @@ url-shortener/
 # First time only
 cdk bootstrap
 
-# Standard deploy (always pass base_domain and frontend_password)
+# Standard deploy — all three context vars required
 cdk deploy --require-approval never \
   -c base_domain=https://<your-api-id>.execute-api.us-east-1.amazonaws.com \
-  -c frontend_password=<your-password>
+  -c frontend_password=<your-password> \
+  -c default_alias=<alias>
 
 # Tear down (DynamoDB table is retained)
 cdk destroy
