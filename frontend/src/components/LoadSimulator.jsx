@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 
 const HIT_THRESHOLD_MS = 30;
 const AUTO_STOP_SECONDS = 15;
-const DEFAULT_URL = 'https://6q3krk3t23.execute-api.us-east-1.amazonaws.com/J0MSPJ';
+const DEFAULT_URL = '';
 
 export default function LoadSimulator({ shortUrl, onStat }) {
   const [targetUrl, setTargetUrl] = useState(DEFAULT_URL);
