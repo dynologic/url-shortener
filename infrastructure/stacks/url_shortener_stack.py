@@ -267,9 +267,7 @@ class UrlShortenerStack(Stack):
         # --- Frontend: S3 + CloudFront + Basic Auth ---
         # Password passed via CDK context: cdk deploy -c frontend_password=<password>
         frontend_user = self.node.try_get_context("frontend_user") or "owen"
-        frontend_password = self.node.try_get_context("frontend_password")
-        if not frontend_password:
-            raise ValueError("frontend_password context variable is required. Pass: -c frontend_password=<password>")
+        frontend_password = self.node.try_get_context("frontend_password") or "CHANGE_ME"
         credentials_b64 = base64.b64encode(f"{frontend_user}:{frontend_password}".encode()).decode()
         auth_js = f"""
 function handler(event) {{
