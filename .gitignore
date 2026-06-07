@@ -1,0 +1,38 @@
+# Environment — never commit real values
+.env
+.env.local
+
+# Python
+.venv/
+__pycache__/
+*.py[oc]
+*.egg-info/
+.pytest_cache/
+
+# CDK
+cdk.out/
+.cdk.staging/
+cdk.context.json
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Build
+build/
+dist/
+wheels/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Misc — not part of the project
+AWSCLIV2.pkg
+result.txt
+ScreenShot01.png
+main.py
