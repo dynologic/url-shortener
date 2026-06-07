@@ -1,8 +1,7 @@
 import { useState } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
-
-export default function UrlForm({ onShortUrl }) {
+export default function UrlForm({ onShortUrl, apiUrl }) {
+  const API_URL = apiUrl || import.meta.env.VITE_API_URL || '';
   const [url, setUrl] = useState('');
   const [shortUrl, setShortUrl] = useState('');
   const [error, setError] = useState('');

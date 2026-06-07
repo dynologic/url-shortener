@@ -2,10 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 
 const HIT_THRESHOLD_MS = 30;
 const AUTO_STOP_SECONDS = 15;
-const DEFAULT_URL = '';
-
-export default function LoadSimulator({ shortUrl, onStat }) {
-  const [targetUrl, setTargetUrl] = useState(DEFAULT_URL);
+export default function LoadSimulator({ shortUrl, onStat, apiUrl, defaultAlias }) {
+  const [targetUrl, setTargetUrl] = useState('');
   const [rps, setRps] = useState(5);
   const [running, setRunning] = useState(false);
   const [countdown, setCountdown] = useState(AUTO_STOP_SECONDS);
@@ -15,7 +13,16 @@ export default function LoadSimulator({ shortUrl, onStat }) {
   const [clearing, setClearing] = useState(false);
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
-  const targetRef = useRef(DEFAULT_URL);
+  const targetRef = useRef('');
+
+  // Set default from runtime config once it loads
+  useEffect(() => {
+    if (apiUrl && defaultAlias && !targetUrl) {
+      const full = `${apiUrl}/${defaultAlias}`;
+      setTargetUrl(full);
+      targetRef.current = full;
+    }
+  }, [apiUrl, defaultAlias]);
 
   // Auto-fill when a URL is created via the form above
   useEffect(() => {

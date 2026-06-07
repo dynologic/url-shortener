@@ -65,11 +65,13 @@ class _LocalBundler:
 class _FrontendBundler:
     """Build the React frontend and copy dist/ into the CDK asset output directory."""
 
-    def __init__(self, api_url: str) -> None:
+    def __init__(self, api_url: str, default_alias: str = '') -> None:
         self._frontend_dir = os.path.join(_PROJECT_ROOT, "frontend")
         self._api_url = api_url
+        self._default_alias = default_alias
 
     def try_bundle(self, output_dir: str, _options: BundlingOptions) -> bool:
+        import json
         env = os.environ.copy()
         env["VITE_API_URL"] = self._api_url
         subprocess.check_call(["npm", "run", "build"], cwd=self._frontend_dir, env=env)
@@ -81,6 +83,9 @@ class _FrontendBundler:
                 shutil.copytree(src, dst, dirs_exist_ok=True)
             else:
                 shutil.copy2(src, dst)
+        # Write runtime config — injected into S3, never baked into the JS bundle
+        with open(os.path.join(output_dir, "config.json"), "w") as f:
+            json.dump({"apiUrl": self._api_url, "defaultAlias": self._default_alias}, f)
         return True
 
 
@@ -91,6 +96,7 @@ class UrlShortenerStack(Stack):
         # BASE_DOMAIN is not known until after first deploy — pass via cdk context:
         # cdk deploy -c base_domain=https://xxx.execute-api.us-east-1.amazonaws.com
         base_domain = self.node.try_get_context("base_domain") or "REPLACE_WITH_API_URL_AFTER_DEPLOY"
+        default_alias = self.node.try_get_context("default_alias") or ""
 
         # --- Networking ---
         vpc = ec2.Vpc(
@@ -315,7 +321,7 @@ function handler(event) {{
                     image=DockerImage.from_registry("node:18"),
                     command=["bash", "-c",
                         f"npm install && VITE_API_URL={base_domain} npm run build && cp -r dist/* /asset-output/"],
-                    local=_FrontendBundler(base_domain),
+                    local=_FrontendBundler(base_domain, default_alias),
                 ),
             )],
             destination_bucket=frontend_bucket,

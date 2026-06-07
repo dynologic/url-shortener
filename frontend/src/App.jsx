@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import UrlForm from './components/UrlForm';
 import LoadSimulator from './components/LoadSimulator';
 import CacheChart from './components/CacheChart';
@@ -10,6 +10,15 @@ export default function App() {
   const [stats, setStats] = useState([]);
   const [shortUrl, setShortUrl] = useState('');
   const [latestStat, setLatestStat] = useState(null);
+  const [config, setConfig] = useState({ apiUrl: '', defaultAlias: '' });
+
+  // Load runtime config from S3/CloudFront — never baked into the JS bundle
+  useEffect(() => {
+    fetch('/config.json')
+      .then(r => r.json())
+      .then(setConfig)
+      .catch(() => {}); // silent fail for local dev without config
+  }, []);
 
   const addStat = useCallback((stat) => {
     setStats(prev => [...prev.slice(-(MAX_STATS - 1)), stat]);
@@ -22,9 +31,14 @@ export default function App() {
       <p style={{ color: '#666', marginBottom: '2rem' }}>
         Capital One internal — cache-aside demo with Redis + DynamoDB
       </p>
-      <UrlForm onShortUrl={setShortUrl} />
+      <UrlForm onShortUrl={setShortUrl} apiUrl={config.apiUrl} />
       <hr style={{ margin: '2rem 0', borderColor: '#e5e7eb' }} />
-      <LoadSimulator shortUrl={shortUrl} onStat={addStat} />
+      <LoadSimulator
+        shortUrl={shortUrl}
+        onStat={addStat}
+        apiUrl={config.apiUrl}
+        defaultAlias={config.defaultAlias}
+      />
       <RequestFlow latestStat={latestStat} />
       <CacheChart stats={stats} />
     </div>
