@@ -266,13 +266,20 @@ class UrlShortenerStack(Stack):
 
         # --- Frontend: S3 + CloudFront + Basic Auth ---
         # Password passed via CDK context: cdk deploy -c frontend_password=<password>
+        # Build list of valid Basic Auth credentials from CDK context
+        # Pass additional users as: -c extra_credentials=user2:pass2,user3:pass3
         frontend_user = self.node.try_get_context("frontend_user") or "owen"
         frontend_password = self.node.try_get_context("frontend_password") or "CHANGE_ME"
-        credentials_b64 = base64.b64encode(f"{frontend_user}:{frontend_password}".encode()).decode()
+        valid = [base64.b64encode(f"{frontend_user}:{frontend_password}".encode()).decode()]
+        extra = self.node.try_get_context("extra_credentials") or ""
+        for pair in [p.strip() for p in extra.split(",") if p.strip()]:
+            valid.append(base64.b64encode(pair.encode()).decode())
+        valid_js = "[" + ",".join(f'\"Basic {c}\"' for c in valid) + "]"
         auth_js = f"""
 function handler(event) {{
     var headers = event.request.headers;
-    if (!headers.authorization || headers.authorization.value !== "Basic {credentials_b64}") {{
+    var valid = {valid_js};
+    if (!headers.authorization || valid.indexOf(headers.authorization.value) === -1) {{
         return {{
             statusCode: 401,
             statusDescription: "Unauthorized",
