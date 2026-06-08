@@ -49,6 +49,9 @@ export default function UrlForm({ onShortUrl, apiUrl }) {
           {loading ? 'Shortening…' : 'Shorten'}
         </button>
       </form>
+      <p style={{ fontSize: '0.78rem', color: '#9ca3af', marginTop: '0.3rem' }}>
+        URL must start with <strong>https://</strong> or <strong>http://</strong> — e.g. https://cbc.ca/article
+      </p>
       {shortUrl && (
         <p style={{ marginTop: '0.75rem' }}>
           Short URL:{' '}
